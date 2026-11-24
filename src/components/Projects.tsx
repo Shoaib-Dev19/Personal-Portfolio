@@ -1,63 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { FiX, FiExternalLink, FiGithub, FiArrowRight, FiLayers, FiFilter, FiMaximize2 } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  FiX, 
+  FiArrowRight, 
+  FiLayers, 
+  FiFilter, 
+  FiMaximize2,
+  FiChevronLeft,
+  FiChevronRight,
+  FiVolume2,
+  FiVolumeX
+} from 'react-icons/fi';
+import { projectsData, type ProjectType, type ProjectCategory } from '../data/projectsData';
 
-// Define the Project Type Interface
-export interface ProjectType {
-  id: string | number;
-  title: string;
-  category: string;
-  shortDesc: string;
-  thumbnail: string;
-  techStack: string[];
-  liveLink?: string;
-  githubLink?: string;
-  story: {
-    challenge: string;
-    solution: string;
-  };
-  gallery: string[];
-}
+const filterCategories: ('All' | ProjectCategory)[] = [
+  'All',
+  'Website Designs',
+  'Full Stack Projects',
+  'Creative Designs',
+  'UGC Ads',
+  'SaaS Apps',
+  'Desktop Apps',
+  'Mobile Apps'
+];
 
-const filterCategories = [
-  "All", 
-  "Website Designs", 
-  "Full Stack Projects", 
-  "SaaS Apps", 
-  "Desktop Apps", 
-  "Mobile Apps"
+const categoriesOrder: ProjectCategory[] = [
+  'Website Designs',
+  'Full Stack Projects',
+  'SaaS Apps',
+  'Desktop Apps',
+  'Mobile Apps'
+];
+
+// 5 UGC Video Ads
+const ugcAdVideos = [
+  '/ugc/Clinic-AD.mp4',
+  '/ugc/desi parents.mp4',
+  '/ugc/Mec Ad.mp4',
+  '/ugc/perfume Ad.mp4',
+  '/ugc/Vendorcity.mp4',
+];
+
+// 19 Creative Social Media & Branding Posts
+const creativeDesignPosts: string[] = [
+  '/creative desiging/slide-01.jpg',
+  '/creative desiging/slide-02.jpg',
+  '/creative desiging/slide-03.jpg',
+  '/creative desiging/slide-04.jpg',
+  '/creative desiging/slide-05.jpg',
+  '/creative desiging/slide-06.jpg',
+  '/creative desiging/slide-07.jpg',
+  '/creative desiging/slide-08.jpg',
+  '/creative desiging/slide-09.jpg',
+  '/creative desiging/slide-10.jpg',
+  '/creative desiging/slide-11.png',
+  '/creative desiging/slide-12.png',
+  '/creative desiging/slide-13.png',
+  '/creative desiging/slide-14.png',
+  '/creative desiging/slide-15.jpg',
+  '/creative desiging/slide-16.png',
+  '/creative desiging/slide-17.png',
+  '/creative desiging/slide-18.png',
+  '/creative desiging/slide-19.png'
 ];
 
 const Projects: React.FC = () => {
-  // States for Dynamic Data
-  const [projectsData, setProjectsData] = useState<ProjectType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Original States
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(null);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState<'All' | ProjectCategory>('All');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Dynamic API Fetch
+  // Creative Designs Coverflow State
+  const [currentCreativeIndex, setCurrentCreativeIndex] = useState(0);
+
+  // UGC Ads Coverflow State
+  const [currentUgcIndex, setCurrentUgcIndex] = useState(0);
+  const [isUgcMuted, setIsUgcMuted] = useState(true);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+
+  const nextCreative = () => {
+    setCurrentCreativeIndex((prev) => (prev + 1) % creativeDesignPosts.length);
+  };
+
+  const prevCreative = () => {
+    setCurrentCreativeIndex((prev) => (prev - 1 + creativeDesignPosts.length) % creativeDesignPosts.length);
+  };
+
+  const nextUgc = () => {
+    setCurrentUgcIndex((prev) => (prev + 1) % ugcAdVideos.length);
+  };
+
+  const prevUgc = () => {
+    setCurrentUgcIndex((prev) => (prev - 1 + ugcAdVideos.length) % ugcAdVideos.length);
+  };
+
+  // Autoplay active UGC video and pause inactive ones
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/projects'); 
-        
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+    if (activeFilter === 'UGC Ads') {
+      videoRefs.current.forEach((video, index) => {
+        if (!video) return;
+        if (index === currentUgcIndex) {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        } else {
+          video.pause();
         }
-        
-        const data = await response.json();
-        setProjectsData(data);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      });
+    } else {
+      videoRefs.current.forEach((video) => {
+        if (video) video.pause();
+      });
+    }
+  }, [currentUgcIndex, activeFilter]);
 
-    fetchProjects();
-  }, []);
+  // Sync mute state for active video
+  useEffect(() => {
+    if (videoRefs.current[currentUgcIndex]) {
+      videoRefs.current[currentUgcIndex]!.muted = isUgcMuted;
+    }
+  }, [isUgcMuted, currentUgcIndex]);
 
   // Lock Body Scroll when Modal is open
   useEffect(() => {
@@ -66,218 +131,738 @@ const Projects: React.FC = () => {
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => { 
+      document.body.style.overflow = 'unset'; 
+    };
   }, [selectedProject]);
 
-  const handleFilterChange = (category: string) => {
+  // Reset slide index whenever selected project changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedProject]);
+
+  // Keyboard navigation for Modal, Creative Slider & UGC Ads Slider
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedProject) {
+        if (e.key === 'Escape') setSelectedProject(null);
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'ArrowLeft') prevImage();
+        return;
+      }
+
+      if (activeFilter === 'Creative Designs') {
+        if (e.key === 'ArrowRight') nextCreative();
+        if (e.key === 'ArrowLeft') prevCreative();
+      }
+
+      if (activeFilter === 'UGC Ads') {
+        if (e.key === 'ArrowRight') nextUgc();
+        if (e.key === 'ArrowLeft') prevUgc();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedProject, currentImageIndex, activeFilter]);
+
+  const nextImage = () => {
+    if (!selectedProject || selectedProject.images.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev + 1) % selectedProject.images.length);
+  };
+
+  const prevImage = () => {
+    if (!selectedProject || selectedProject.images.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev - 1 + selectedProject.images.length) % selectedProject.images.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX === null || touchEndX === null) return;
+    const distance = touchStartX - touchEndX;
+    if (activeFilter === 'Creative Designs') {
+      if (distance > 45) nextCreative();
+      if (distance < -45) prevCreative();
+    } else if (activeFilter === 'UGC Ads') {
+      if (distance > 45) nextUgc();
+      if (distance < -45) prevUgc();
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const diff = dragStartX - e.clientX;
+    if (activeFilter === 'Creative Designs') {
+      if (diff > 45) nextCreative();
+      if (diff < -45) prevCreative();
+    } else if (activeFilter === 'UGC Ads') {
+      if (diff > 45) nextUgc();
+      if (diff < -45) prevUgc();
+    }
+    setIsDragging(false);
+  };
+
+  const getCreativeOffset = (index: number) => {
+    let diff = index - currentCreativeIndex;
+    const half = Math.floor(creativeDesignPosts.length / 2);
+    if (diff > half) diff -= creativeDesignPosts.length;
+    if (diff < -half) diff += creativeDesignPosts.length;
+    return diff;
+  };
+
+  const getUgcOffset = (index: number) => {
+    let diff = index - currentUgcIndex;
+    const half = Math.floor(ugcAdVideos.length / 2);
+    if (diff > half) diff -= ugcAdVideos.length;
+    if (diff < -half) diff += ugcAdVideos.length;
+    return diff;
+  };
+
+  const handleFilterChange = (category: 'All' | ProjectCategory) => {
     if (category === activeFilter) return;
     setIsAnimating(true);
     setTimeout(() => {
       setActiveFilter(category);
       setIsAnimating(false);
-    }, 250); 
+    }, 200); 
   };
 
-  // Static Filter Logic matching categories safely
-  const filteredProjects = projectsData.filter((project) => {
-    if (activeFilter === "All") return true;
-    
-    const cat = project.category.toLowerCase();
-    const filter = activeFilter.toLowerCase();
-    
-    if (filter.includes('website') && (cat.includes('front') || cat.includes('web') || cat.includes('design'))) return true;
-    if (filter.includes('full stack') && (cat.includes('full') || cat.includes('stack') || cat.includes('backend'))) return true;
-    if (filter.includes('saas') && cat.includes('saas')) return true;
-    if (filter.includes('desktop') && cat.includes('desktop')) return true;
-    if (filter.includes('mobile') && (cat.includes('mobile') || cat.includes('app'))) return true;
-    
-    return false;
+  // In "All" tab: dynamically pick 1 project per available category for the Bento Showcase
+  const bentoProjects: ProjectType[] = [];
+  categoriesOrder.forEach((cat) => {
+    const project = projectsData.find((p) => p.category === cat);
+    if (project) {
+      bentoProjects.push(project);
+    }
   });
 
+  // Displayed projects based on active filter
+  const displayedProjects = activeFilter === 'All' 
+    ? bentoProjects 
+    : projectsData.filter((project) => project.category === activeFilter);
+
+  const isBento = activeFilter === 'All';
+
+  // Bento span mapping: 1st is wide (col-span-7), 2nd is col-span-5, others col-span-4
+  const getBentoColSpan = (index: number) => {
+    if (index === 0) return 'md:col-span-7';
+    if (index === 1) return 'md:col-span-5';
+    return 'md:col-span-4';
+  };
+
   return (
-    <section id="projects" className="relative py-24 md:py-32 bg-[#fafafa] dark:bg-[#050505] min-h-screen overflow-hidden selection:bg-teal-500/20 transition-colors duration-500">
-      
-      {/* Background Ambience */}
-      <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-teal-500/5 dark:bg-teal-500/10 rounded-full blur-[150px] pointer-events-none"></div>
-      <div className="absolute bottom-0 right-1/4 w-[50rem] h-[50rem] bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-[200px] pointer-events-none"></div>
+    <section 
+      id="projects" 
+      className="relative py-24 md:py-32 bg-[#fafafa] dark:bg-[#050505] min-h-screen overflow-hidden selection:bg-teal-500/20 transition-colors duration-500"
+    >
+      {/* Background Ambient Glows */}
+      <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-teal-500/5 dark:bg-teal-500/10 rounded-full blur-[160px] pointer-events-none"></div>
+      <div className="absolute bottom-0 right-1/4 w-[45rem] h-[45rem] bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-[180px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
           <div className="max-w-3xl">
-            <div className="inline-flex mb-6 items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 shadow-sm">
+            <div className="inline-flex mb-5 items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 shadow-sm">
               <FiLayers className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span className="text-gray-600 dark:text-gray-300 font-mono text-xs tracking-widest uppercase font-semibold">Portfolio Showcase</span>
+              <span className="text-gray-600 dark:text-gray-300 font-mono text-xs tracking-widest uppercase font-semibold">
+                Portfolio Showcase
+              </span>
             </div>
-            <h2 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">
-              Selected <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-amber-500">Case Studies.</span>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-tight">
+              Selected <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-[#f5a623]">Case Studies.</span>
             </h2>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-lg font-light max-w-sm border-l-2 border-teal-500 pl-5 mb-2">
-            Explore my digital architectures by category. Click on any card to view the complete visual story and screenshots.
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base font-light max-w-sm border-l-2 border-teal-500 pl-4 mb-1">
+            Engineered with modern architecture and dual-theme fidelity. Select any card to explore full screenshots and technical specifications.
           </p>
         </div>
 
         {/* --- FILTER BUTTONS --- */}
-        <div className="flex flex-wrap items-center gap-3 mb-12">
-          <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 mr-2">
+        <div className="flex flex-wrap items-center gap-2.5 mb-12">
+          <div className="hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 mr-1">
             <FiFilter className="w-4 h-4" />
           </div>
-          {filterCategories.map((category) => (
-            <button
-              key={category}
-              onClick={() => handleFilterChange(category)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
-                activeFilter === category
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md scale-105'
-                  : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-200 dark:hover:border-teal-500/30 shadow-sm'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+          {filterCategories.map((category) => {
+            const isActive = activeFilter === category;
+            return (
+              <button
+                key={category}
+                onClick={() => handleFilterChange(category)}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 cursor-pointer ${
+                  isActive
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md scale-105'
+                    : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-200 dark:hover:border-teal-500/30 shadow-sm'
+                }`}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
 
-        {/* --- DYNAMIC PROJECT CARDS GRID --- */}
-        {isLoading ? (
-           <div className="flex justify-center items-center h-64 w-full">
-             <div className="text-teal-600 dark:text-teal-400 font-bold text-xl animate-pulse">Loading Elite Projects...</div>
-           </div>
+        {/* --- DYNAMIC VIEW: 3D COVERFLOW FOR "CREATIVE DESIGNS" / GRID FOR OTHERS --- */}
+        {activeFilter === 'Creative Designs' ? (
+          <div className={`transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+            
+            {/* Context Header */}
+            <div className="text-center mb-8">
+              <span className="text-teal-700 dark:text-teal-300 font-mono text-xs uppercase tracking-widest font-bold bg-teal-50 dark:bg-white/5 border border-teal-200 dark:border-white/10 px-4 py-1.5 rounded-full inline-block shadow-xs">
+                Visual Branding & Social Media Creatives
+              </span>
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-2.5 max-w-md mx-auto font-light">
+                Explore 19 curated branding, promotional graphics, and social media campaigns in an interactive 3D coverflow showcase.
+              </p>
+            </div>
+
+            {/* 3D Coverflow Stage */}
+            <div 
+              className="relative w-full max-w-6xl mx-auto h-[440px] sm:h-[520px] md:h-[600px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing select-none px-4"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+            >
+              {/* Slides Track */}
+              {creativeDesignPosts.map((post, index) => {
+                const offset = getCreativeOffset(index);
+                const absOffset = Math.abs(offset);
+
+                if (absOffset > 2) return null;
+
+                let translatePercent = 0;
+                let scale = 1;
+                let zIndex = 30;
+                let opacity = 1;
+                let extraClasses = '';
+
+                if (offset === 0) {
+                  translatePercent = 0;
+                  scale = 1;
+                  zIndex = 30;
+                  opacity = 1;
+                  extraClasses = 'blur-0 ring-2 ring-teal-500/70 dark:ring-teal-400/70 shadow-[0_20px_50px_rgba(20,184,166,0.3)] dark:shadow-[0_20px_50px_rgba(20,184,166,0.35)]';
+                } else if (absOffset === 1) {
+                  translatePercent = offset * 68;
+                  scale = 0.88;
+                  zIndex = 20;
+                  opacity = 0.65;
+                  extraClasses = 'blur-[4px] shadow-lg hover:opacity-90';
+                } else if (absOffset === 2) {
+                  translatePercent = offset * 125;
+                  scale = 0.75;
+                  zIndex = 10;
+                  opacity = 0.3;
+                  extraClasses = 'blur-[7px] shadow-sm hidden md:block hover:opacity-60';
+                }
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      if (offset !== 0) setCurrentCreativeIndex(index);
+                    }}
+                    style={{
+                      transform: `translateX(${translatePercent}%) scale(${scale})`,
+                      zIndex,
+                      opacity,
+                    }}
+                    className={`absolute transition-all duration-500 ease-out cursor-pointer origin-center w-[250px] sm:w-[320px] md:w-[380px] aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 ${extraClasses}`}
+                  >
+                    <img 
+                      src={post} 
+                      alt={`Creative Post ${index + 1}`} 
+                      className="w-full h-full object-cover pointer-events-none select-none"
+                      loading="lazy"
+                    />
+
+                    {/* Gradient highlight on active slide */}
+                    {offset === 0 && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Prev Circular Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevCreative();
+                }}
+                aria-label="Previous Slide"
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/90 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white backdrop-blur-md border border-gray-200 dark:border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-xl hover:scale-105 active:scale-95 z-40"
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Next Circular Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextCreative();
+                }}
+                aria-label="Next Slide"
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/90 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white backdrop-blur-md border border-gray-200 dark:border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-xl hover:scale-105 active:scale-95 z-40"
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Slide Counter & Progress Dots */}
+            <div className="flex flex-col items-center gap-4 mt-6">
+              {/* Counter Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 shadow-sm">
+                <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                  {String(currentCreativeIndex + 1).padStart(2, '0')}
+                </span>
+                <span className="text-gray-400 text-xs font-mono">/</span>
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {String(creativeDesignPosts.length).padStart(2, '0')}
+                </span>
+              </div>
+
+              {/* Dots Progress Strip */}
+              <div className="flex items-center justify-center gap-1.5 max-w-sm sm:max-w-md mx-auto px-4 overflow-x-auto hide-scrollbar py-1">
+                {creativeDesignPosts.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentCreativeIndex(idx)}
+                    aria-label={`Jump to slide ${idx + 1}`}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      currentCreativeIndex === idx
+                        ? 'w-7 h-2 bg-gradient-to-r from-teal-500 to-[#f5a623]'
+                        : 'w-2 h-2 bg-gray-300 dark:bg-white/20 hover:bg-gray-400 dark:hover:bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+          </div>
+        ) : activeFilter === 'UGC Ads' ? (
+          <div className={`transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+            
+            {/* Context Header */}
+            <div className="text-center mb-8">
+              <span className="text-teal-700 dark:text-teal-300 font-mono text-xs uppercase tracking-widest font-bold bg-teal-50 dark:bg-white/5 border border-teal-200 dark:border-white/10 px-4 py-1.5 rounded-full inline-block shadow-xs">
+                Short-Form UGC & Video Campaigns
+              </span>
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-2.5 max-w-md mx-auto font-light">
+                High-converting UGC reel video ads designed for commercial reach, viral hook rates, and brand engagement.
+              </p>
+            </div>
+
+            {/* 3D Coverflow Stage */}
+            <div 
+              className="relative w-full max-w-6xl mx-auto h-[460px] sm:h-[540px] md:h-[620px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing select-none px-4"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+            >
+              {/* Slides Track */}
+              {ugcAdVideos.map((videoSrc, index) => {
+                const offset = getUgcOffset(index);
+                const absOffset = Math.abs(offset);
+
+                if (absOffset > 2) return null;
+
+                let translatePercent = 0;
+                let scale = 1;
+                let zIndex = 30;
+                let opacity = 1;
+                let extraClasses = '';
+
+                if (offset === 0) {
+                  translatePercent = 0;
+                  scale = 1;
+                  zIndex = 30;
+                  opacity = 1;
+                  extraClasses = 'blur-0 ring-2 ring-teal-500/70 dark:ring-teal-400/70 shadow-[0_20px_50px_rgba(20,184,166,0.3)] dark:shadow-[0_20px_50px_rgba(20,184,166,0.35)]';
+                } else if (absOffset === 1) {
+                  translatePercent = offset * 68;
+                  scale = 0.88;
+                  zIndex = 20;
+                  opacity = 0.65;
+                  extraClasses = 'blur-[4px] shadow-lg hover:opacity-90';
+                } else if (absOffset === 2) {
+                  translatePercent = offset * 125;
+                  scale = 0.75;
+                  zIndex = 10;
+                  opacity = 0.3;
+                  extraClasses = 'blur-[7px] shadow-sm hidden md:block hover:opacity-60';
+                }
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      if (offset !== 0) setCurrentUgcIndex(index);
+                    }}
+                    style={{
+                      transform: `translateX(${translatePercent}%) scale(${scale})`,
+                      zIndex,
+                      opacity,
+                    }}
+                    className={`absolute transition-all duration-500 ease-out cursor-pointer origin-center w-[230px] sm:w-[280px] md:w-[320px] aspect-[9/16] rounded-2xl sm:rounded-3xl overflow-hidden bg-black border border-gray-200 dark:border-white/10 ${extraClasses}`}
+                  >
+                    <video
+                      src={videoSrc}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Gradient highlight on active slide */}
+                    {offset === 0 && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Prev Circular Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevUgc();
+                }}
+                aria-label="Previous Slide"
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/90 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white backdrop-blur-md border border-gray-200 dark:border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-xl hover:scale-105 active:scale-95 z-40"
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Next Circular Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextUgc();
+                }}
+                aria-label="Next Slide"
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-white/90 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white backdrop-blur-md border border-gray-200 dark:border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-xl hover:scale-105 active:scale-95 z-40"
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Slide Counter & Progress Dots */}
+            <div className="flex flex-col items-center gap-4 mt-6">
+              {/* Counter Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 shadow-sm">
+                <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                  {String(currentUgcIndex + 1).padStart(2, '0')}
+                </span>
+                <span className="text-gray-400 text-xs font-mono">/</span>
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {String(ugcAdVideos.length).padStart(2, '0')}
+                </span>
+              </div>
+
+              {/* Dots Progress Strip */}
+              <div className="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto px-4 overflow-x-auto hide-scrollbar py-1">
+                {ugcAdVideos.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentUgcIndex(idx)}
+                    aria-label={`Jump to slide ${idx + 1}`}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      currentUgcIndex === idx
+                        ? 'w-7 h-2 bg-gradient-to-r from-teal-500 to-[#f5a623]'
+                        : 'w-2 h-2 bg-gray-300 dark:bg-white/20 hover:bg-gray-400 dark:hover:bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+          </div>
         ) : (
-          <div className={`transition-opacity duration-300 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-            {filteredProjects.map((project, index) => (
+          <div 
+            className={`transition-opacity duration-300 ${
+              isBento 
+                ? 'grid grid-cols-1 md:grid-cols-12 gap-5' 
+                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'
+            } ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
+          >
+            {displayedProjects.map((project, index) => (
               <div 
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
-                className="group relative bg-white dark:bg-[#0a0a0a]/90 border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 transition-all duration-500 shadow-[0_10px_30px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:-translate-y-2 cursor-pointer flex flex-col h-[380px] overflow-hidden"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className={`group relative bg-white dark:bg-[#0a0a0a]/90 border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:shadow-xl dark:hover:shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:-translate-y-1 cursor-pointer flex flex-col justify-between ${
+                  isBento ? getBentoColSpan(index) : ''
+                }`}
+                style={{ animationDelay: `${index * 40}ms` }}
               >
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Subtle top hover accent line */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 to-[#f5a623] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
 
-                <div className="mb-6 flex justify-between items-center">
-                  <span className="text-teal-600 dark:text-teal-400 font-mono text-xs uppercase tracking-widest font-bold bg-teal-50 dark:bg-teal-950/40 px-4 py-1.5 rounded-full border border-teal-100 dark:border-teal-500/20 inline-block">
-                    {project.category}
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:bg-teal-50 dark:group-hover:bg-white/10 transition-colors">
-                    <FiMaximize2 className="w-3.5 h-3.5" />
+                {/* Compact 16:10 Cover Image Frame */}
+                <div className="relative w-full aspect-[16/10] bg-gray-100 dark:bg-black/50 overflow-hidden">
+                  <img 
+                    src={project.thumbnail || project.images[0]} 
+                    alt={project.title}
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" 
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  {/* Floating Category Badge & Maximize Icon */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                    <span className="text-teal-700 dark:text-teal-300 font-mono text-[10px] sm:text-[11px] uppercase tracking-wider font-bold bg-white/90 dark:bg-black/75 backdrop-blur-md px-3 py-1 rounded-full border border-gray-200/60 dark:border-white/15 shadow-sm">
+                      {project.category}
+                    </span>
+                    <div className="w-7 h-7 rounded-full bg-white/90 dark:bg-black/75 backdrop-blur-md border border-gray-200/60 dark:border-white/15 flex items-center justify-center text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors shadow-sm">
+                      <FiMaximize2 className="w-3.5 h-3.5" />
+                    </div>
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-4 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                  {project.title}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-light mb-6 flex-1 line-clamp-4">
-                  {project.shortDesc}
-                </p>
+                {/* Card Content Area with compact p-5 padding */}
+                <div className="p-5 flex flex-col flex-1 justify-between">
+                  <div>
+                    {/* Project Title */}
+                    <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight leading-snug mb-1.5 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-1">
+                      {project.title}
+                    </h3>
 
-                <div className="mt-auto pt-6 border-t border-gray-100 dark:border-white/5">
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {project.techStack.slice(0, 3).map((tech, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-600 dark:text-gray-300 text-[11px] font-semibold">
-                        {tech}
-                      </span>
-                    ))}
-                    {project.techStack.length > 3 && (
-                      <span className="px-2.5 py-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-400 dark:text-gray-500 text-[11px] font-semibold">
-                        +{project.techStack.length - 3}
-                      </span>
-                    )}
+                    {/* Concise Short Description */}
+                    <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed font-light line-clamp-2 mb-3.5">
+                      {project.shortDesc}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-sm group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                    View Details & Case Study <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  {/* Card Bottom: Tech Stack Pills & CTA */}
+                  <div className="pt-3 border-t border-gray-100 dark:border-white/5 mt-auto">
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {project.techStack.slice(0, 3).map((tech, i) => (
+                        <span 
+                          key={i} 
+                          className="px-2 py-0.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md text-gray-700 dark:text-gray-300 text-[10px] sm:text-[11px] font-medium"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                      {project.techStack.length > 3 && (
+                        <span className="px-2 py-0.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md text-gray-400 dark:text-gray-500 text-[10px] sm:text-[11px] font-medium">
+                          +{project.techStack.length - 3}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-gray-900 dark:text-white font-bold text-xs group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      <span>View Details</span>
+                      <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
                 </div>
+
               </div>
             ))}
-            
-            {/* Empty State Fallback */}
-            {!isLoading && filteredProjects.length === 0 && (
-              <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20 text-gray-500 dark:text-gray-400 font-medium">
-                No projects found in this category.
+
+            {/* Empty State Fallback for categories with no projects yet */}
+            {displayedProjects.length === 0 && (
+              <div className="col-span-full text-center py-20 px-6">
+                <div className="inline-flex p-3 rounded-2xl bg-teal-50 dark:bg-white/5 border border-teal-100 dark:border-teal-500/20 text-teal-600 dark:text-teal-400 mb-4 shadow-sm">
+                  <FiLayers className="w-6 h-6" />
+                </div>
+                <h4 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-1.5">
+                  Projects in {activeFilter} are coming soon!
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                  Currently preparing and uploading real case studies for this category. Check back shortly or browse other categories!
+                </p>
               </div>
             )}
           </div>
         )}
+
       </div>
 
-      {/* --- CINEMATIC LIGHT / DARK MODAL (WITH IMAGES & STORY) --- */}
+      {/* ==================================================================== */}
+      {/* LARGE SPLIT-VIEW MODAL (LEFT IMAGE SLIDER + RIGHT DESCRIPTION)       */}
+      {/* ==================================================================== */}
       {selectedProject && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-0">
-          <div className="absolute inset-0 bg-white/70 dark:bg-black/80 backdrop-blur-2xl animate-[fadeIn_0.4s_ease-out]" onClick={() => setSelectedProject(null)}></div>
-          
-          <div className="relative w-full max-w-6xl h-[90vh] md:h-[85vh] bg-white dark:bg-[#0a0a0a]/95 border border-gray-200 dark:border-white/10 rounded-[2.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.15)] dark:shadow-[0_50px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col animate-[modalEntrance_0.6s_cubic-bezier(0.16,1,0.3,1)_forwards] z-10">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md transition-all duration-300 animate-fadeIn"
+          onClick={() => setSelectedProject(null)}
+        >
+          {/* Modal Container */}
+          <div 
+            className="relative w-full max-w-6xl max-h-[92vh] flex flex-col bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
             
-            <button 
-              onClick={() => setSelectedProject(null)} 
-              aria-label="Close Modal"
-              className="absolute top-6 right-6 z-50 w-12 h-12 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md hover:bg-white dark:hover:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 shadow-sm rounded-full flex items-center justify-center text-gray-900 dark:text-white transition-all active:scale-90"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
-
-            <div className="flex-1 overflow-y-auto hide-scrollbar">
-              {/* Hero Banner Image */}
-              <div className="relative w-full h-[40vh] md:h-[50vh]">
-                <img src={selectedProject.thumbnail} alt="Project Banner" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0a0a0a] via-white/30 dark:via-[#0a0a0a]/30 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                   <span className="text-teal-600 dark:text-teal-400 font-mono text-sm tracking-widest uppercase font-bold mb-3 block">{selectedProject.category}</span>
-                   <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter drop-shadow-sm">{selectedProject.title}</h2>
-                </div>
+            {/* Modal Header Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02]">
+              <div className="flex items-center gap-3">
+                <span className="text-teal-700 dark:text-teal-300 font-mono text-xs uppercase tracking-wider font-bold bg-teal-50 dark:bg-teal-950/50 px-3 py-1 rounded-full border border-teal-100 dark:border-teal-500/20">
+                  {selectedProject.category}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
+                  Interactive Split Case Study
+                </span>
               </div>
 
-              {/* Grid content */}
-              <div className="p-8 md:p-12 grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-12 bg-white dark:bg-[#0a0a0a]">
-                <div className="space-y-10">
+              {/* Close Button */}
+              <button 
+                onClick={() => setSelectedProject(null)} 
+                aria-label="Close Modal"
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content Split Grid */}
+            <div className="p-6 sm:p-8 overflow-y-auto hide-scrollbar flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-stretch min-h-full">
+                
+                {/* -------------------------------------------------------- */}
+                {/* LEFT SIDE: Interactive Image Slider (Full Height Flex)   */}
+                {/* -------------------------------------------------------- */}
+                <div className="flex flex-col justify-between h-full gap-4">
+                  
+                  {/* Expanded Main Showcase Frame */}
+                  <div className="relative w-full flex-1 min-h-[380px] lg:min-h-[460px] bg-gray-100 dark:bg-black/60 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 flex items-center justify-center shadow-inner group">
+                    <img 
+                      key={currentImageIndex}
+                      src={selectedProject.images[currentImageIndex] || selectedProject.images[0]} 
+                      alt={`${selectedProject.title} screenshot ${currentImageIndex + 1}`}
+                      className="w-full h-full object-contain p-2 sm:p-4 transition-all duration-500"
+                    />
+
+                    {/* Slide Counter Badge */}
+                    <div className="absolute top-3 left-3 pointer-events-none z-10">
+                      <span className="text-[11px] font-mono tracking-widest px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20 font-bold">
+                        {currentImageIndex + 1} / {selectedProject.images.length}
+                      </span>
+                    </div>
+
+                    {/* Navigation Buttons (visible when more than 1 image) */}
+                    {selectedProject.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevImage}
+                          aria-label="Previous Image"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all cursor-pointer opacity-90 hover:scale-105 active:scale-95 z-10"
+                        >
+                          <FiChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          aria-label="Next Image"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all cursor-pointer opacity-90 hover:scale-105 active:scale-95 z-10"
+                        >
+                          <FiChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Clickable Mini Thumbnails / Slider Strip */}
+                  {selectedProject.images.length > 1 && (
+                    <div className="flex items-center justify-center flex-wrap gap-2.5 pt-1 h-20 shrink-0 overflow-y-auto hide-scrollbar">
+                      {selectedProject.images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`relative h-20 aspect-[4/5] rounded-xl overflow-hidden border-2 transition-all cursor-pointer bg-gray-100 dark:bg-black/40 ${
+                            currentImageIndex === idx 
+                              ? 'border-teal-500 shadow-md scale-105' 
+                              : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-white/30'
+                          }`}
+                        >
+                          <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-contain p-0.5" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+
+                {/* -------------------------------------------------------- */}
+                {/* RIGHT SIDE: Description & Tech Stack ("Built With")       */}
+                {/* -------------------------------------------------------- */}
+                <div className="flex flex-col space-y-6">
+                  
+                  {/* Title & Category Header */}
                   <div>
-                    <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Tech Stack</h4>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-3">
+                      {selectedProject.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed font-light">
+                      {selectedProject.description}
+                    </p>
+                  </div>
+
+                  {/* Challenge & Solution Breakdown */}
+                  {(selectedProject.challenge || selectedProject.solution) && (
+                    <div className="space-y-3.5">
+                      {selectedProject.challenge && (
+                        <div className="p-4 rounded-2xl bg-teal-50/50 dark:bg-white/[0.03] border-l-4 border-teal-500 border-y border-r border-gray-200/60 dark:border-white/5">
+                          <h4 className="text-[11px] font-mono uppercase tracking-wider text-teal-600 dark:text-teal-400 font-bold mb-1">
+                            The Challenge
+                          </h4>
+                          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed font-light">
+                            {selectedProject.challenge}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedProject.solution && (
+                        <div className="p-4 rounded-2xl bg-amber-50/40 dark:bg-white/[0.03] border-l-4 border-[#f5a623] border-y border-r border-gray-200/60 dark:border-white/5">
+                          <h4 className="text-[11px] font-mono uppercase tracking-wider text-amber-600 dark:text-[#f5a623] font-bold mb-1">
+                            The Solution
+                          </h4>
+                          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed font-light">
+                            {selectedProject.solution}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Dedicated "Built With / Technologies Used" Section */}
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3 font-semibold">
+                      Built With / Technologies Used
+                    </h4>
                     <div className="flex flex-wrap gap-2">
-                      {selectedProject.techStack.map((tech, i) => (
-                        <span key={i} className="px-4 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-700 dark:text-gray-300 text-xs font-bold">{tech}</span>
+                      {selectedProject.techStack.map((tech, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3.5 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-800 dark:text-gray-200 text-xs font-semibold shadow-xs"
+                        >
+                          {tech}
+                        </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Deployments</h4>
-                    {selectedProject.liveLink && selectedProject.liveLink !== '#' && (
-                      <a href={selectedProject.liveLink} target="_blank" rel="noreferrer" className="flex items-center gap-3 w-full px-6 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-2xl hover:bg-black dark:hover:bg-gray-200 transition-all justify-center shadow-lg group">
-                        <FiExternalLink className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" /> Visit Live Project
-                      </a>
-                    )}
-                    {selectedProject.githubLink && selectedProject.githubLink !== '#' && (
-                      <a href={selectedProject.githubLink} target="_blank" rel="noreferrer" className="flex items-center gap-3 w-full px-6 py-4 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all justify-center shadow-sm group">
-                        <FiGithub className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" /> View on GitHub
-                      </a>
-                    )}
-                  </div>
                 </div>
 
-                <div className="space-y-12">
-                  <div className="prose prose-gray max-w-none">
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-4 flex items-center gap-3"><span className="w-8 h-1 bg-teal-500 rounded-full"></span> The Challenge</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed font-light mb-10">{selectedProject.story.challenge}</p>
-
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-4 flex items-center gap-3"><span className="w-8 h-1 bg-amber-500 rounded-full"></span> The Solution</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed font-light">{selectedProject.story.solution}</p>
-                  </div>
-
-                  {/* Screenshots Gallery */}
-                  {selectedProject.gallery && selectedProject.gallery.length > 0 && (
-                    <div className="space-y-6 pt-6">
-                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Project Screenshots</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {selectedProject.gallery.map((img, i) => (
-                          <div key={i} className="rounded-3xl overflow-hidden border border-gray-100 dark:border-white/10 shadow-lg group bg-gray-50 dark:bg-white/5">
-                            <img src={img} alt={`Gallery ${i}`} className="w-full h-auto group-hover:scale-102 transition-transform duration-500" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -285,15 +870,12 @@ const Projects: React.FC = () => {
         </div>
       )}
 
+      {/* Embedded Animation Styles */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes modalEntrance { 
-          from { opacity: 0; transform: translateY(80px) scale(0.96); } 
-          to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-        .hide-scrollbar::-webkit-scrollbar { width: 6px; }
+        .hide-scrollbar::-webkit-scrollbar { width: 5px; }
         .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .hide-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .hide-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .dark .hide-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
       `}</style>
 

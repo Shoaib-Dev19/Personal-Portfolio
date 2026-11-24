@@ -1,11 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  SiReact, SiTailwindcss, SiJavascript, SiBootstrap, SiAngular, SiAlpinedotjs,
-  SiLaravel, SiPhp, SiNodedotjs, SiNextdotjs,
-  SiMysql, SiMongodb, SiPostgresql,
-  SiDocker, SiGit, SiFirebase, SiSupabase, SiVercel, SiCloudflare
-} from 'react-icons/si';
-import { FaHtml5, FaCss3Alt } from 'react-icons/fa';
+  FaHtml5, 
+  FaCss3Alt, 
+  FaBootstrap, 
+  FaJs, 
+  FaReact, 
+  FaLaravel, 
+  FaPhp, 
+  FaPython, 
+  FaDocker, 
+  FaGitAlt 
+} from 'react-icons/fa';
+import { 
+  TbBrandTailwind, 
+  TbBrandTypescript, 
+  TbBrandReactNative, 
+  TbBolt, 
+  TbAtom, 
+  TbBrandMysql, 
+  TbBrandMongodb, 
+  TbBrandFirebase, 
+  TbBrandSupabase, 
+  TbBrandVercel, 
+  TbBrandCloudflare 
+} from 'react-icons/tb';
+import { DiPostgresql } from 'react-icons/di';
 import { FiTerminal, FiCpu } from 'react-icons/fi';
 
 // Categorized & Updated Tech Data
@@ -18,12 +37,12 @@ const techData = [
     techs: [
       { name: 'HTML5', icon: FaHtml5, color: '#E34F26', textClass: 'text-[#E34F26]' },
       { name: 'CSS3', icon: FaCss3Alt, color: '#1572B6', textClass: 'text-[#1572B6]' },
-      { name: 'Bootstrap', icon: SiBootstrap, color: '#7952B3', textClass: 'text-[#7952B3]' },
-      { name: 'Tailwind', icon: SiTailwindcss, color: '#06B6D4', textClass: 'text-[#06B6D4]' },
-      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E', textClass: 'text-[#D4B811]' },
-      { name: 'React.js', icon: SiReact, color: '#087EA4', textClass: 'text-[#087EA4]' },
-      { name: 'Angular.js', icon: SiAngular, color: '#DD0031', textClass: 'text-[#DD0031]' },
-      { name: 'Alpine.js', icon: SiAlpinedotjs, color: '#8BC0D0', textClass: 'text-[#629BAE]' },
+      { name: 'Bootstrap', icon: FaBootstrap, color: '#7952B3', textClass: 'text-[#7952B3]' },
+      { name: 'Tailwind', icon: TbBrandTailwind, color: '#06B6D4', textClass: 'text-[#06B6D4]' },
+      { name: 'JavaScript', icon: FaJs, color: '#F7DF1E', textClass: 'text-[#D4B811]' },
+      { name: 'React.js', icon: FaReact, color: '#087EA4', textClass: 'text-[#087EA4]' },
+      { name: 'TypeScript', icon: TbBrandTypescript, color: '#3178C6', textClass: 'text-[#3178C6]' },
+      { name: 'React Native', icon: TbBrandReactNative, color: '#00D8FF', textClass: 'text-[#00D8FF]' },
     ]
   },
   {
@@ -32,10 +51,11 @@ const techData = [
     command: 'deploy_module --env=backend',
     glowColor: 'bg-[#f5a623]',
     techs: [
-      { name: 'Laravel', icon: SiLaravel, color: '#FF2D20', textClass: 'text-[#FF2D20]' },
-      { name: 'Node.js', icon: SiNodedotjs, color: '#339933', textClass: 'text-[#339933]' },
-      { name: 'Next.js', icon: SiNextdotjs, color: '#000000', textClass: 'text-black dark:text-white' },
-      { name: 'Core PHP', icon: SiPhp, color: '#777BB4', textClass: 'text-[#777BB4]' },
+      { name: 'Laravel', icon: FaLaravel, color: '#FF2D20', textClass: 'text-[#FF2D20]' },
+      { name: 'Core PHP', icon: FaPhp, color: '#777BB4', textClass: 'text-[#777BB4]' },
+      { name: 'Python', icon: FaPython, color: '#3776AB', textClass: 'text-[#3776AB]' },
+      { name: 'FastAPI', icon: TbBolt, color: '#009688', textClass: 'text-[#009688]' },
+      { name: 'Electron.js', icon: TbAtom, color: '#47848F', textClass: 'text-[#47848F]' },
     ]
   },
   {
@@ -44,9 +64,9 @@ const techData = [
     command: 'initialize_databases --secure=true',
     glowColor: 'bg-blue-400',
     techs: [
-      { name: 'MySQL', icon: SiMysql, color: '#4479A1', textClass: 'text-[#4479A1]' },
-      { name: 'PostgreSQL', icon: SiPostgresql, color: '#4169E1', textClass: 'text-[#4169E1]' },
-      { name: 'MongoDB', icon: SiMongodb, color: '#47A248', textClass: 'text-[#47A248]' },
+      { name: 'MySQL', icon: TbBrandMysql, color: '#4479A1', textClass: 'text-[#4479A1]' },
+      { name: 'PostgreSQL', icon: DiPostgresql, color: '#4169E1', textClass: 'text-[#4169E1]' },
+      { name: 'MongoDB', icon: TbBrandMongodb, color: '#47A248', textClass: 'text-[#47A248]' },
     ]
   },
   {
@@ -55,12 +75,12 @@ const techData = [
     command: 'start_pipeline --deploy=auto',
     glowColor: 'bg-purple-400',
     techs: [
-      { name: 'Git', icon: SiGit, color: '#F05032', textClass: 'text-[#F05032]' },
-      { name: 'Docker', icon: SiDocker, color: '#2496ED', textClass: 'text-[#2496ED]' },
-      { name: 'Firebase', icon: SiFirebase, color: '#FFCA28', textClass: 'text-[#E5A500]' },
-      { name: 'Supabase', icon: SiSupabase, color: '#3ECF8E', textClass: 'text-[#3ECF8E]' },
-      { name: 'Vercel', icon: SiVercel, color: '#000000', textClass: 'text-black dark:text-white' },
-      { name: 'Cloudflare', icon: SiCloudflare, color: '#F38020', textClass: 'text-[#F38020]' },
+      { name: 'Git', icon: FaGitAlt, color: '#F05032', textClass: 'text-[#F05032]' },
+      { name: 'Docker', icon: FaDocker, color: '#2496ED', textClass: 'text-[#2496ED]' },
+      { name: 'Firebase', icon: TbBrandFirebase, color: '#FFCA28', textClass: 'text-[#E5A500]' },
+      { name: 'Supabase', icon: TbBrandSupabase, color: '#3ECF8E', textClass: 'text-[#3ECF8E]' },
+      { name: 'Vercel', icon: TbBrandVercel, color: '#000000', textClass: 'text-black dark:text-white' },
+      { name: 'Cloudflare', icon: TbBrandCloudflare, color: '#F38020', textClass: 'text-[#F38020]' },
     ]
   }
 ];
@@ -208,7 +228,7 @@ const TechStack: React.FC = () => {
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryClick(idx)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all font-semibold ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all font-semibold cursor-pointer ${
                     activeCategory === idx 
                       ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 shadow-sm' 
                       : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-200'
