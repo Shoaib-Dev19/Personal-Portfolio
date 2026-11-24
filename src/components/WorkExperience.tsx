@@ -1,9 +1,52 @@
 import React, { useRef } from 'react';
-import { FiBriefcase, FiCode, FiCpu, FiCheckCircle, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
+import { 
+  FiBriefcase, 
+  FiCode, 
+  FiCpu, 
+  FiCheckCircle, 
+  FiChevronRight, 
+  FiChevronLeft,
+  FiLayout,
+  FiSmartphone
+} from 'react-icons/fi';
 
 const experiences = [
   {
     id: 1,
+    role: 'Web Developer & Creative Designer',
+    company: 'Logical Technologist, Hyderabad',
+    duration: 'July 1st - Present',
+    icon: FiLayout,
+    year: '2026',
+    colorTheme: 'teal',
+    iconBg: 'bg-teal-50',
+    iconColor: 'text-teal-600 dark:text-teal-400',
+    borderColor: 'border-teal-200 dark:border-teal-500/30',
+    bullets: [
+      "Designing and developing modern commercial SaaS websites and interactive web platforms using React, Next.js, and Tailwind CSS.",
+      "Crafting cohesive brand identities, social media visual campaigns, product mockups, and high-retention creative designs.",
+      "Enhancing frontend performance and user engagement through responsive layouts, smooth micro-interactions, and clean UI/UX systems."
+    ]
+  },
+  {
+    id: 2,
+    role: 'Freelance Desktop & Mobile Developer',
+    company: 'Independent / Remote',
+    duration: '',
+    icon: FiSmartphone,
+    year: '',
+    colorTheme: 'amber',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-[#f5a623]',
+    borderColor: 'border-amber-200 dark:border-amber-500/30',
+    bullets: [
+      "Architecting offline-first desktop applications using Electron.js, React, TypeScript, and local SQLite databases for business automation.",
+      "Building cross-platform mobile applications with responsive interfaces, real-time cloud sync, and seamless REST API integrations.",
+      "Delivering end-to-end custom software solutions—from database architecture and licensing systems to deployment and client support."
+    ]
+  },
+  {
+    id: 3,
     role: 'Lead Developer',
     company: 'CodeTacto Team, Hyderabad',
     duration: 'Aug 2025 – Present',
@@ -20,7 +63,7 @@ const experiences = [
     ]
   },
   {
-    id: 2,
+    id: 4,
     role: 'Full-Stack Developer',
     company: 'MK TECH LAB, Hyderabad, Qasimabad',
     duration: 'Jun 2025 – Dec 2025',
@@ -37,7 +80,7 @@ const experiences = [
     ]
   },
   {
-    id: 3,
+    id: 5,
     role: 'Freelance Software Engineer',
     company: 'Self-Employed (Personal Projects), Hyderabad',
     duration: 'Mar 2025 – Present',
@@ -125,7 +168,7 @@ const WorkExperience: React.FC = () => {
         className="w-full md:w-[65%] lg:w-[70%] h-full overflow-x-auto flex items-center snap-x snap-mandatory hide-scroll px-8 md:px-0 py-10 md:py-0 relative z-10"
       >
         {/* The Continuous Horizontal Timeline Track */}
-        <div className="absolute top-1/2 left-0 w-[300%] h-0.5 bg-gray-200 dark:bg-white/10 -translate-y-1/2 hidden md:block z-0"></div>
+        <div className="absolute top-1/2 left-0 w-[500%] h-0.5 bg-gray-200 dark:bg-white/10 -translate-y-1/2 hidden md:block z-0"></div>
 
         <div className="flex items-center gap-8 md:gap-16 pb-10 md:pb-0 md:pr-32">
           {experiences.map((exp) => (
@@ -136,9 +179,15 @@ const WorkExperience: React.FC = () => {
               
               {/* Timeline Node & Year (Desktop only visual) */}
               <div className="hidden md:flex flex-col items-center absolute -left-8 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20">
-                <span className="text-4xl font-black text-gray-200 dark:text-gray-800 mb-4 opacity-50 group-hover:text-teal-500 dark:group-hover:text-teal-400 group-hover:opacity-100 transition-colors duration-500">
-                  {exp.year}
-                </span>
+                {exp.year ? (
+                  <span className="text-4xl font-black text-gray-200 dark:text-gray-800 mb-4 opacity-50 group-hover:text-teal-500 dark:group-hover:text-teal-400 group-hover:opacity-100 transition-colors duration-500">
+                    {exp.year}
+                  </span>
+                ) : (
+                  <span className="text-4xl font-black mb-4 invisible select-none">
+                    &nbsp;
+                  </span>
+                )}
                 <div className={`w-6 h-6 rounded-full bg-white dark:bg-[#0a0a0a] border-4 ${exp.borderColor} shadow-md`}></div>
               </div>
 
@@ -162,9 +211,11 @@ const WorkExperience: React.FC = () => {
                       </h4>
                     </div>
                   </div>
-                  <span className={`text-xs font-bold font-mono px-4 py-2 rounded-full border ${exp.iconBg} dark:bg-white/5 ${exp.borderColor} dark:border-white/10 ${exp.iconColor} shrink-0`}>
-                    {exp.duration}
-                  </span>
+                  {exp.duration && (
+                    <span className={`text-xs font-bold font-mono px-4 py-2 rounded-full border ${exp.iconBg} dark:bg-white/5 ${exp.borderColor} dark:border-white/10 ${exp.iconColor} shrink-0`}>
+                      {exp.duration}
+                    </span>
+                  )}
                 </div>
                 
                 {/* Storytelling Bullet Points */}

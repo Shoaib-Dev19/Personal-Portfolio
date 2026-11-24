@@ -104,23 +104,33 @@ const Projects: React.FC = () => {
         if (!video) return;
         if (index === currentUgcIndex) {
           video.currentTime = 0;
+          video.muted = isUgcMuted;
           video.play().catch(() => {});
         } else {
+          video.muted = true;
           video.pause();
         }
       });
     } else {
       videoRefs.current.forEach((video) => {
-        if (video) video.pause();
+        if (video) {
+          video.muted = true;
+          video.pause();
+        }
       });
     }
   }, [currentUgcIndex, activeFilter]);
 
-  // Sync mute state for active video
+  // Sync mute state for active video and keep background videos muted
   useEffect(() => {
-    if (videoRefs.current[currentUgcIndex]) {
-      videoRefs.current[currentUgcIndex]!.muted = isUgcMuted;
-    }
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      if (index === currentUgcIndex) {
+        video.muted = isUgcMuted;
+      } else {
+        video.muted = true;
+      }
+    });
   }, [isUgcMuted, currentUgcIndex]);
 
   // Lock Body Scroll when Modal is open
@@ -615,6 +625,8 @@ const Projects: React.FC = () => {
                   extraClasses = 'blur-[7px] shadow-sm hidden md:block hover:opacity-60';
                 }
 
+                const isCenterSlide = offset === 0;
+
                 return (
                   <div
                     key={index}
@@ -629,13 +641,35 @@ const Projects: React.FC = () => {
                     className={`absolute transition-all duration-500 ease-out cursor-pointer origin-center w-[230px] sm:w-[280px] md:w-[320px] aspect-[9/16] rounded-2xl sm:rounded-3xl overflow-hidden bg-black border border-gray-200 dark:border-white/10 ${extraClasses}`}
                   >
                     <video
+                      ref={(el) => {
+                        videoRefs.current[index] = el;
+                      }}
                       src={videoSrc}
                       autoPlay
                       loop
-                      muted
+                      muted={isUgcMuted || !isCenterSlide}
                       playsInline
                       className="w-full h-full object-cover"
                     />
+
+                    {/* Mute / Unmute Floating Sound Toggle Button on Active Center Card */}
+                    {isCenterSlide && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsUgcMuted((prev) => !prev);
+                        }}
+                        aria-label={isUgcMuted ? 'Unmute video' : 'Mute video'}
+                        className="absolute top-3.5 right-3.5 z-40 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/80 hover:border-teal-400 transition-all duration-200 focus:outline-none"
+                      >
+                        {isUgcMuted ? (
+                          <FiVolumeX className="w-4 h-4" />
+                        ) : (
+                          <FiVolume2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
 
                     {/* Gradient highlight on active slide */}
                     {offset === 0 && (
