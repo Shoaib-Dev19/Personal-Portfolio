@@ -233,5 +233,27 @@ export const projectsData: ProjectType[] = [
     challenge: 'Managing IT hardware, incoming stock, and equipment dispatches across multiple district police stations using manual registers caused tracking delays, missing audit trails, and slow requisition approvals.',
     solution: 'Built a tamper-resistant, offline-capable desktop command suite with real-time IN/OUT stock tracking, station-wise dispatch ledgers, instant global search, priority requisition logging, and one-click printable audit reports.',
     techStack: ['Electron.js', 'React', 'TypeScript', 'Tailwind CSS', 'SQLite']
+  },
+  {
+    id: 'fullstack-pos-system',
+    title: 'SwiftPOS — Full-Stack Restaurant & Retail POS System',
+    category: 'Full Stack Projects',
+    thumbnail: '/pos/pos-02.png',
+    images: [
+      '/pos/pos-02.png',
+      '/pos/pos-03.png',
+      '/pos/pos-04.png',
+      '/pos/pos-05.png',
+      '/pos/pos-06.png',
+      '/pos/pos-07.png',
+      '/pos/pos-08.png',
+      '/pos/pos-09.png',
+      '/pos/pos-10.png'
+    ],
+    shortDesc: 'A full-stack Point of Sale and restaurant operations platform powered by React, TypeScript, FastAPI, and PostgreSQL—featuring rapid billing, live Kitchen Display boards, table management, inventory control, and real-time revenue analytics.',
+    description: 'SwiftPOS is a high-speed, full-stack Point of Sale and hospitality management platform engineered with a React + TypeScript frontend and an asynchronous Python FastAPI + PostgreSQL backend. Built for restaurants, cafes, and multi-counter retail businesses, it unifies front-of-house billing with back-of-house operations—featuring color-coded quick-billing terminals, real-time Kitchen Display System (KDS) order queues, interactive floor & table status grids, stock and inventory ledgers, thermal receipt customization, and daily revenue analytics.',
+    challenge: 'High-volume restaurants and retail counters suffer from billing bottlenecks, delayed kitchen order routing, and out-of-sync stock counts when using legacy or disconnected POS software.',
+    solution: 'Architected a low-latency REST API backend in FastAPI backed by transactional PostgreSQL storage and a responsive React + TypeScript interface—synchronizing counter orders, kitchen prep boards, table availability, and live inventory in real time.',
+    techStack: ['React', 'TypeScript', 'FastAPI', 'PostgreSQL', 'Tailwind CSS']
   }
 ];

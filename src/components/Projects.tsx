@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   FiX, 
   FiArrowRight, 
+  FiArrowUpRight,
   FiLayers, 
+  FiLayout,
+  FiImage,
+  FiVideo,
+  FiMonitor,
+  FiCloud,
+  FiSmartphone,
   FiFilter, 
   FiMaximize2,
   FiChevronLeft,
@@ -18,14 +25,6 @@ const filterCategories: ('All' | ProjectCategory)[] = [
   'Full Stack Projects',
   'Creative Designs',
   'UGC Ads',
-  'SaaS Apps',
-  'Desktop Apps',
-  'Mobile Apps'
-];
-
-const categoriesOrder: ProjectCategory[] = [
-  'Website Designs',
-  'Full Stack Projects',
   'SaaS Apps',
   'Desktop Apps',
   'Mobile Apps'
@@ -242,28 +241,74 @@ const Projects: React.FC = () => {
     }, 200); 
   };
 
-  // In "All" tab: dynamically pick 1 project per available category for the Bento Showcase
-  const bentoProjects: ProjectType[] = [];
-  categoriesOrder.forEach((cat) => {
-    const project = projectsData.find((p) => p.category === cat);
-    if (project) {
-      bentoProjects.push(project);
-    }
-  });
+  // 7-Section Category Directory for "All" tab
+  const categoryDirectory = [
+    {
+      id: 'Website Designs' as ProjectCategory,
+      title: 'Website Designs',
+      subtitle: 'Modern, high-converting web storefronts, clinics, academies, and brand websites.',
+      colSpan: 'md:col-span-6',
+      icon: FiLayout,
+      count: `${projectsData.filter((p) => p.category === 'Website Designs').length} Projects`,
+    },
+    {
+      id: 'Full Stack Projects' as ProjectCategory,
+      title: 'Full Stack Projects',
+      subtitle: 'End-to-end web applications powered by React, TypeScript, FastAPI, Laravel, and SQL/PostgreSQL.',
+      colSpan: 'md:col-span-6',
+      icon: FiLayers,
+      count: `${projectsData.filter((p) => p.category === 'Full Stack Projects').length} ${
+        projectsData.filter((p) => p.category === 'Full Stack Projects').length === 1 ? 'Project' : 'Projects'
+      }`,
+    },
+    {
+      id: 'Creative Designs' as ProjectCategory,
+      title: 'Creative Designs',
+      subtitle: 'Social media branding campaigns, promotional posters, and visual creatives.',
+      colSpan: 'md:col-span-4',
+      icon: FiImage,
+      count: `${creativeDesignPosts.length} Creatives`,
+    },
+    {
+      id: 'UGC Ads' as ProjectCategory,
+      title: 'UGC Ads',
+      subtitle: 'High-retention AI-generated UGC video reels and commercial product ads.',
+      colSpan: 'md:col-span-4',
+      icon: FiVideo,
+      count: `${ugcAdVideos.length} Video Ads`,
+    },
+    {
+      id: 'Desktop Apps' as ProjectCategory,
+      title: 'Desktop Apps',
+      subtitle: 'Offline-first Electron.js, React, and SQLite enterprise management suites.',
+      colSpan: 'md:col-span-4',
+      icon: FiMonitor,
+      count: `${projectsData.filter((p) => p.category === 'Desktop Apps').length} Projects`,
+    },
+    {
+      id: 'SaaS Apps' as ProjectCategory,
+      title: 'SaaS Apps',
+      subtitle: 'Multi-tenant cloud platforms, automated workflows, and subscription-ready software.',
+      colSpan: 'md:col-span-6',
+      icon: FiCloud,
+      count: projectsData.filter((p) => p.category === 'SaaS Apps').length > 0 
+        ? `${projectsData.filter((p) => p.category === 'SaaS Apps').length} Projects` 
+        : 'Coming Soon',
+    },
+    {
+      id: 'Mobile Apps' as ProjectCategory,
+      title: 'Mobile Apps',
+      subtitle: 'Cross-platform iOS and Android applications engineered with React Native.',
+      colSpan: 'md:col-span-6',
+      icon: FiSmartphone,
+      count: projectsData.filter((p) => p.category === 'Mobile Apps').length > 0 
+        ? `${projectsData.filter((p) => p.category === 'Mobile Apps').length} Projects` 
+        : 'Coming Soon',
+    },
+  ];
 
   // Displayed projects based on active filter
-  const displayedProjects = activeFilter === 'All' 
-    ? bentoProjects 
-    : projectsData.filter((project) => project.category === activeFilter);
-
-  const isBento = activeFilter === 'All';
-
-  // Bento span mapping: 1st is wide (col-span-7), 2nd is col-span-5, others col-span-4
-  const getBentoColSpan = (index: number) => {
-    if (index === 0) return 'md:col-span-7';
-    if (index === 1) return 'md:col-span-5';
-    return 'md:col-span-4';
-  };
+  const displayedProjects = projectsData.filter((project) => project.category === activeFilter);
 
   return (
     <section 
@@ -317,8 +362,66 @@ const Projects: React.FC = () => {
           })}
         </div>
 
-        {/* --- DYNAMIC VIEW: 3D COVERFLOW FOR "CREATIVE DESIGNS" / GRID FOR OTHERS --- */}
-        {activeFilter === 'Creative Designs' ? (
+        {/* --- DYNAMIC VIEW: CATEGORY DIRECTORY ("ALL") / COVERFLOWS / 4-COLUMN CARDS GRID --- */}
+        {activeFilter === 'All' ? (
+          <div className={`grid grid-cols-1 md:grid-cols-12 gap-5 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+            {categoryDirectory.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  handleFilterChange(item.id);
+                  const el = document.getElementById('projects');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`group relative bg-white dark:bg-[#0a0a0a]/90 border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-7 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:shadow-xl dark:hover:shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:-translate-y-1 hover:border-teal-500/50 dark:hover:border-teal-400/50 min-h-[210px] sm:min-h-[230px] ${item.colSpan}`}
+              >
+                {/* Subtle top hover accent line */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 to-[#f5a623] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+
+                {/* Subtle radial spotlight glow on hover */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-teal-500/10 dark:bg-teal-500/15 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+                {/* Top Row: Icon Container + Dynamic Item Count Pill */}
+                <div className="flex items-center justify-between mb-5 relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-white/5 border border-teal-100 dark:border-white/10 flex items-center justify-center text-teal-600 dark:text-teal-400 group-hover:scale-110 group-hover:bg-teal-500/15 group-hover:text-teal-500 transition-all duration-300 shadow-xs">
+                    <item.icon className="w-6 h-6" />
+                  </div>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-bold border transition-colors shadow-xs ${
+                      item.count === 'Coming Soon'
+                        ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400'
+                        : 'bg-gray-100 dark:bg-white/5 border-gray-200/80 dark:border-white/10 text-gray-700 dark:text-gray-300 group-hover:border-teal-500/30 group-hover:text-teal-600 dark:group-hover:text-teal-400'
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                </div>
+
+                {/* Middle: Bold Category Title + 2-Line Subtitle */}
+                <div className="mb-6 relative z-10">
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-snug mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-light line-clamp-2">
+                    {item.subtitle}
+                  </p>
+                </div>
+
+                {/* Bottom Row: Interactive Footer CTA */}
+                <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between mt-auto relative z-10">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                    Explore Section
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-500 transition-all duration-300 shadow-xs">
+                    <FiArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activeFilter === 'Creative Designs' ? (
           <div className={`transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
             
             {/* Context Header */}
@@ -600,19 +703,15 @@ const Projects: React.FC = () => {
           </div>
         ) : (
           <div 
-            className={`transition-opacity duration-300 ${
-              isBento 
-                ? 'grid grid-cols-1 md:grid-cols-12 gap-5' 
-                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'
-            } ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 transition-opacity duration-300 ${
+              isAnimating ? 'opacity-0' : 'opacity-100'
+            }`}
           >
             {displayedProjects.map((project, index) => (
               <div 
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
-                className={`group relative bg-white dark:bg-[#0a0a0a]/90 border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:shadow-xl dark:hover:shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:-translate-y-1 cursor-pointer flex flex-col justify-between ${
-                  isBento ? getBentoColSpan(index) : ''
-                }`}
+                className="group relative bg-white dark:bg-[#0a0a0a]/90 border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:shadow-xl dark:hover:shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
                 style={{ animationDelay: `${index * 40}ms` }}
               >
                 {/* Subtle top hover accent line */}
