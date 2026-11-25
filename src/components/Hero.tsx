@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { FiGithub, FiLinkedin, FiTwitter, FiInstagram } from 'react-icons/fi';
 
 const roles = [
   "Frontend Developer",
@@ -88,15 +87,9 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Social Icons Modernized */}
-          <div className="flex gap-5">
-            {[FiInstagram, FiLinkedin, FiTwitter, FiGithub].map((Icon, idx) => (
-              <a key={idx} href="#" className="relative group p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-teal-500/50 hover:bg-teal-50 dark:hover:bg-white/10 transition-all duration-300 overflow-hidden shadow-sm">
-                <div className="absolute inset-0 bg-teal-100/50 dark:bg-teal-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-                <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 relative z-10 transition-colors" />
-              </a>
-            ))}
-          </div>
+          <p className="mt-4 max-w-[280px] text-xs sm:text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Crafting scalable <span className="font-semibold text-gray-900 dark:text-white">web, desktop, and mobile</span> products—let’s connect and build something impactful.
+          </p>
         </div>
 
         {/* --- CENTER COLUMN (Image) --- */}
