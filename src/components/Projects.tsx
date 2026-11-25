@@ -150,6 +150,20 @@ const Projects: React.FC = () => {
     setCurrentImageIndex(0);
   }, [selectedProject]);
 
+  // Preload immediate next and previous modal slide images
+  useEffect(() => {
+    if (!selectedProject || selectedProject.images.length <= 1) return;
+    const total = selectedProject.images.length;
+    const nextIdx = (currentImageIndex + 1) % total;
+    const prevIdx = (currentImageIndex - 1 + total) % total;
+
+    const nextImg = new Image();
+    nextImg.src = selectedProject.images[nextIdx];
+
+    const prevImg = new Image();
+    prevImg.src = selectedProject.images[prevIdx];
+  }, [selectedProject, currentImageIndex]);
+
   // Keyboard navigation for Modal, Creative Slider & UGC Ads Slider
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -503,7 +517,8 @@ const Projects: React.FC = () => {
                       src={post} 
                       alt={`Creative Post ${index + 1}`} 
                       className="w-full h-full object-cover pointer-events-none select-none"
-                      loading="lazy"
+                      loading={offset === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
                     />
 
                     {/* Gradient highlight on active slide */}
@@ -883,6 +898,7 @@ const Projects: React.FC = () => {
                       key={currentImageIndex}
                       src={selectedProject.images[currentImageIndex] || selectedProject.images[0]} 
                       alt={`${selectedProject.title} screenshot ${currentImageIndex + 1}`}
+                      decoding="async"
                       className="w-full h-full object-contain p-2 sm:p-4 transition-all duration-500"
                     />
 
@@ -927,7 +943,7 @@ const Projects: React.FC = () => {
                               : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-white/30'
                           }`}
                         >
-                          <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-contain p-0.5" />
+                          <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-contain p-0.5" />
                         </button>
                       ))}
                     </div>
