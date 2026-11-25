@@ -77,8 +77,8 @@ const Navbar: React.FC = () => {
 
             {/* Elite Download CV Button */}
             <a 
-              href="/cv.pdf"
-              download="Shoaib_CV.pdf"
+              href="/ShoaibBuriroResume.pdf"
+              download="ShoaibBuriroResume.pdf"
               className="group relative inline-flex items-center justify-center gap-2 px-5 py-2.5 font-bold text-gray-800 dark:text-gray-200 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full overflow-hidden transition-all duration-300 hover:text-white hover:border-transparent hover:shadow-[0_10px_25px_rgba(20,184,166,0.15)] active:scale-95"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-teal-500 to-teal-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></span>
@@ -131,8 +131,8 @@ const Navbar: React.FC = () => {
             {/* Mobile CV Download Button */}
             <div className="pt-4 mt-2 border-t border-gray-100 dark:border-white/10">
               <a 
-                href="/cv.pdf"
-                download="Shoaib_CV.pdf"
+                href="/ShoaibBuriroResume.pdf"
+                download="ShoaibBuriroResume.pdf"
                 className="flex items-center justify-center gap-2 w-full px-5 py-3.5 font-bold text-white bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-98 text-sm uppercase tracking-wider"
               >
                 <FiDownload className="w-4 h-4" />
